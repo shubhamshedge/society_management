@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../injection_container.dart' as di;
 import '../../../auth/domain/entities/society_role_entity.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/widgets/role_badge.dart';
+import '../../../maintenance/presentation/bloc/maintenance_bloc.dart';
+import '../../../maintenance/presentation/pages/maintenance_dues_page.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   final UserEntity user;
@@ -16,6 +19,20 @@ class AdminDashboardPage extends StatelessWidget {
     required this.user,
     required this.activeRole,
   });
+
+  void _openMaintenancePage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => di.sl<MaintenanceBloc>(),
+          child: MaintenanceDuesPage(
+            societyId: activeRole.societyId,
+            societyName: activeRole.societyName,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,9 +168,10 @@ class AdminDashboardPage extends StatelessWidget {
                   child: _buildMetricCard(
                     title: 'Maintenance Dues',
                     value: '₹3,45,000',
-                    subtitle: '78% Collected',
+                    subtitle: '78% Collected • View Details',
                     color: AppColors.khajandarColor,
                     icon: Icons.account_balance_wallet_rounded,
+                    onTap: () => _openMaintenancePage(context),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -164,6 +182,14 @@ class AdminDashboardPage extends StatelessWidget {
                     subtitle: '2 Awaiting Approval',
                     color: AppColors.sachivColor,
                     icon: Icons.handyman_rounded,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Opening Work Orders & Repairs module...'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -196,7 +222,8 @@ class AdminDashboardPage extends StatelessWidget {
               icon: Icons.receipt_long_rounded,
               iconColor: AppColors.khajandarColor,
               title: 'Society Maintenance & Billing',
-              description: 'Generate monthly bills, review ledger, verify offline cheque payments',
+              description: 'View Paid & Remaining members, Defaulter list (3+ mos), Cheque approvals',
+              onTap: () => _openMaintenancePage(context),
             ),
             const SizedBox(height: 10),
             _buildActionTile(
@@ -235,57 +262,65 @@ class AdminDashboardPage extends StatelessWidget {
     required Color color,
     required IconData icon,
     bool isFullWidth = false,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: color),
                 ),
-                child: Icon(icon, size: 16, color: color),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: color,
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -296,52 +331,57 @@ class AdminDashboardPage extends StatelessWidget {
     required Color iconColor,
     required String title,
     required String description,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: iconColor, size: 24),
             ),
-            child: Icon(icon, color: iconColor, size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    height: 1.3,
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                      height: 1.3,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-        ],
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          ],
+        ),
       ),
     );
   }

@@ -11,6 +11,12 @@ import 'features/auth/domain/usecases/select_society_role_usecase.dart';
 import 'features/auth/domain/usecases/send_otp_usecase.dart';
 import 'features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/maintenance/data/datasources/maintenance_remote_data_source.dart';
+import 'features/maintenance/data/repositories/maintenance_repository_impl.dart';
+import 'features/maintenance/domain/repositories/maintenance_repository.dart';
+import 'features/maintenance/domain/usecases/get_maintenance_dues_data_usecase.dart';
+import 'features/maintenance/domain/usecases/send_payment_reminder_usecase.dart';
+import 'features/maintenance/presentation/bloc/maintenance_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -28,12 +34,20 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(apiClient: sl<ApiClient>()),
   );
+  sl.registerLazySingleton<MaintenanceRemoteDataSource>(
+    () => MaintenanceRemoteDataSourceImpl(apiClient: sl<ApiClient>()),
+  );
 
   // 3. Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       remoteDataSource: sl<AuthRemoteDataSource>(),
       localDataSource: sl<AuthLocalDataSource>(),
+    ),
+  );
+  sl.registerLazySingleton<MaintenanceRepository>(
+    () => MaintenanceRepositoryImpl(
+      remoteDataSource: sl<MaintenanceRemoteDataSource>(),
     ),
   );
 
@@ -44,6 +58,13 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => GetCurrentUserUseCase(sl<AuthRepository>()));
   sl.registerLazySingleton(() => LogoutUseCase(sl<AuthRepository>()));
 
+  sl.registerLazySingleton(
+    () => GetMaintenanceDuesDataUseCase(sl<MaintenanceRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => SendPaymentReminderUseCase(sl<MaintenanceRepository>()),
+  );
+
   // 5. Blocs
   sl.registerFactory(
     () => AuthBloc(
@@ -52,6 +73,13 @@ Future<void> initDependencies() async {
       selectSocietyRoleUseCase: sl<SelectSocietyRoleUseCase>(),
       getCurrentUserUseCase: sl<GetCurrentUserUseCase>(),
       logoutUseCase: sl<LogoutUseCase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => MaintenanceBloc(
+      getMaintenanceDuesDataUseCase: sl<GetMaintenanceDuesDataUseCase>(),
+      sendPaymentReminderUseCase: sl<SendPaymentReminderUseCase>(),
     ),
   );
 }
