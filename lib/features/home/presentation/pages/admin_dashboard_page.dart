@@ -9,6 +9,8 @@ import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/widgets/role_badge.dart';
 import '../../../maintenance/presentation/bloc/maintenance_bloc.dart';
 import '../../../maintenance/presentation/pages/maintenance_dues_page.dart';
+import '../../../work_order/presentation/bloc/work_order_bloc.dart';
+import '../../../work_order/presentation/pages/work_order_list_page.dart';
 
 class AdminDashboardPage extends StatelessWidget {
   final UserEntity user;
@@ -28,6 +30,21 @@ class AdminDashboardPage extends StatelessWidget {
           child: MaintenanceDuesPage(
             societyId: activeRole.societyId,
             societyName: activeRole.societyName,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openWorkOrdersPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => di.sl<WorkOrderBloc>(),
+          child: WorkOrderListPage(
+            societyId: activeRole.societyId,
+            societyName: activeRole.societyName,
+            userRoleName: '${activeRole.role.displayName} (${user.fullName})',
           ),
         ),
       ),
@@ -182,14 +199,7 @@ class AdminDashboardPage extends StatelessWidget {
                     subtitle: '2 Awaiting Approval',
                     color: AppColors.sachivColor,
                     icon: Icons.handyman_rounded,
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Opening Work Orders & Repairs module...'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
+                    onTap: () => _openWorkOrdersPage(context),
                   ),
                 ),
               ],
@@ -230,8 +240,9 @@ class AdminDashboardPage extends StatelessWidget {
               context: context,
               icon: Icons.construction_rounded,
               iconColor: AppColors.sachivColor,
-              title: 'Work Done & Repair Orders',
-              description: 'Assign vendors, review photographic proofs, sign-off completed tasks',
+              title: 'Work Orders & Repairs (कार्यादेश)',
+              description: 'Assign vendors, review photographic proofs, approve repair orders',
+              onTap: () => _openWorkOrdersPage(context),
             ),
             const SizedBox(height: 10),
             _buildActionTile(

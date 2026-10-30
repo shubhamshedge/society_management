@@ -4,7 +4,7 @@ import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/domain/entities/society_role_entity.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/bloc/auth_event.dart';
+import 'features/auth/presentation/bloc/auth_event.dart'; 
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/otp_verification_page.dart';

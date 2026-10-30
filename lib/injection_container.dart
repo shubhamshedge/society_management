@@ -17,6 +17,12 @@ import 'features/maintenance/domain/repositories/maintenance_repository.dart';
 import 'features/maintenance/domain/usecases/get_maintenance_dues_data_usecase.dart';
 import 'features/maintenance/domain/usecases/send_payment_reminder_usecase.dart';
 import 'features/maintenance/presentation/bloc/maintenance_bloc.dart';
+import 'features/work_order/data/datasources/work_order_remote_data_source.dart';
+import 'features/work_order/data/repositories/work_order_repository_impl.dart';
+import 'features/work_order/domain/repositories/work_order_repository.dart';
+import 'features/work_order/domain/usecases/approve_work_order_usecase.dart';
+import 'features/work_order/domain/usecases/get_work_orders_usecase.dart';
+import 'features/work_order/presentation/bloc/work_order_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -37,6 +43,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<MaintenanceRemoteDataSource>(
     () => MaintenanceRemoteDataSourceImpl(apiClient: sl<ApiClient>()),
   );
+  sl.registerLazySingleton<WorkOrderRemoteDataSource>(
+    () => WorkOrderRemoteDataSourceImpl(apiClient: sl<ApiClient>()),
+  );
 
   // 3. Repositories
   sl.registerLazySingleton<AuthRepository>(
@@ -48,6 +57,11 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<MaintenanceRepository>(
     () => MaintenanceRepositoryImpl(
       remoteDataSource: sl<MaintenanceRemoteDataSource>(),
+    ),
+  );
+  sl.registerLazySingleton<WorkOrderRepository>(
+    () => WorkOrderRepositoryImpl(
+      remoteDataSource: sl<WorkOrderRemoteDataSource>(),
     ),
   );
 
@@ -65,6 +79,13 @@ Future<void> initDependencies() async {
     () => SendPaymentReminderUseCase(sl<MaintenanceRepository>()),
   );
 
+  sl.registerLazySingleton(
+    () => GetWorkOrdersUseCase(sl<WorkOrderRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => ApproveWorkOrderUseCase(sl<WorkOrderRepository>()),
+  );
+
   // 5. Blocs
   sl.registerFactory(
     () => AuthBloc(
@@ -80,6 +101,13 @@ Future<void> initDependencies() async {
     () => MaintenanceBloc(
       getMaintenanceDuesDataUseCase: sl<GetMaintenanceDuesDataUseCase>(),
       sendPaymentReminderUseCase: sl<SendPaymentReminderUseCase>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => WorkOrderBloc(
+      getWorkOrdersUseCase: sl<GetWorkOrdersUseCase>(),
+      approveWorkOrderUseCase: sl<ApproveWorkOrderUseCase>(),
     ),
   );
 }
