@@ -9,6 +9,8 @@ import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/widgets/role_badge.dart';
 import '../../../maintenance/presentation/bloc/maintenance_bloc.dart';
 import '../../../maintenance/presentation/pages/maintenance_dues_page.dart';
+import '../../../notice/presentation/bloc/notice_bloc.dart';
+import '../../../notice/presentation/pages/publish_notice_page.dart';
 import '../../../work_order/presentation/bloc/work_order_bloc.dart';
 import '../../../work_order/presentation/pages/work_order_list_page.dart';
 
@@ -51,8 +53,25 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 
+  void _openPublishNoticePage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) => di.sl<NoticeBloc>(),
+          child: PublishNoticePage(
+            societyId: activeRole.societyId,
+            societyName: activeRole.societyName,
+            chairmanName: user.fullName,
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isChairman = activeRole.role == SocietyRoleType.adhyaksha;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -167,6 +186,101 @@ class AdminDashboardPage extends StatelessWidget {
                 ],
               ),
             ),
+
+            // --- CHAIRMAN ONLY EXCLUSIVE NOTICE BROADCAST SECTION ---
+            if (isChairman) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6D28D9), AppColors.adhyakshaColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.adhyakshaColor.withValues(alpha: 0.3),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.military_tech_rounded, size: 14, color: AppColors.accent),
+                              SizedBox(width: 4),
+                              Text(
+                                'Chairman Exclusive Power',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.campaign_rounded, color: Colors.white, size: 26),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Broadcast Notice to Every Owner',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Draft and publish circulars, AGM announcements & urgent alerts directly to all 40 flat owners via WhatsApp & mobile push notification.',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.85),
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.adhyakshaColor,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(Icons.send_rounded, size: 18),
+                        label: const Text(
+                          'Add Notice & Send to Owners (सूचना भेजें)',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                        onPressed: () => _openPublishNoticePage(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 24),
 
             // Key Metrics Grid
@@ -244,6 +358,17 @@ class AdminDashboardPage extends StatelessWidget {
               description: 'Assign vendors, review photographic proofs, approve repair orders',
               onTap: () => _openWorkOrdersPage(context),
             ),
+            if (isChairman) ...[
+              const SizedBox(height: 10),
+              _buildActionTile(
+                context: context,
+                icon: Icons.campaign_rounded,
+                iconColor: AppColors.adhyakshaColor,
+                title: 'Official Notice Board (सूचना फलक)',
+                description: 'Issue official circulars & broadcast to all flat owners',
+                onTap: () => _openPublishNoticePage(context),
+              ),
+            ],
             const SizedBox(height: 10),
             _buildActionTile(
               context: context,
